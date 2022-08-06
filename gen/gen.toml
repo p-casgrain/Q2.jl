@@ -1,0 +1,17 @@
+[general]
+library_name = "libq"
+output_file_path = "./LibQ.jl"
+module_name = "LibQ"
+# jll_pkg_name = "Q_jll"
+# export_symbol_prefixes = ["QX", "q_"]
+# extra opts
+smart_de_anonymize = true
+use_deterministic_symbol = true
+auto_mutability = true
+auto_mutability_with_new = true
+use_julia_bool = true
+use_ccall_macro = true
+wrap_variadic_function = true
+macro_mode = "aggressive"
+add_comment_for_skipped_macro = true
+ignore_header_guards = false
