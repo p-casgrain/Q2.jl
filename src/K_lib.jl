@@ -5,10 +5,15 @@ module K_lib
 # parts that were incorrectly parsed. See <root>/src/gen for details.
 
 #TODO: ./deps/build.jl or artifact & programatically determine C_LIBQ location
-# library location
-C_LIBQ = "/Users/pcasgrain/Documents/GitHub/Q.jl/src/c.dylib"
 
-using CEnum
+# library location
+if Sys.isapple()
+    const C_LIBQ = joinpath(@__DIR__,"deps/","c.dylib")
+elseif Sys.islinux()
+    const C_LIBQ =  joinpath(@__DIR__,"deps/","c.dylib")
+else
+    const C_LIBQ = "" 
+end
 
 # Define C type aliases
 const J = Clonglong
@@ -247,8 +252,6 @@ const ne = E(NaN32)
 const we = E(Inf32)
 const nf = F(NaN64)
 const wf = F(Inf64)
-
-
 
 
 end
