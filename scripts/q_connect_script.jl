@@ -11,6 +11,7 @@ using BenchmarkTools
 
 using Q2
 conn = KDBConnection(host="localhost", port=5555)
+
 execute(conn, "{.data.b:x}", rand(Float32, 10, 10))
 execute(conn, ".data.b")
 

@@ -8,9 +8,9 @@ module K_lib
 
 # library location
 if Sys.isapple()
-    const C_LIBQ = joinpath(@__DIR__,"deps/","c.dylib")
+    const C_LIBQ = joinpath(@__DIR__,"..","deps/","c.dylib")
 elseif Sys.islinux()
-    const C_LIBQ =  joinpath(@__DIR__,"deps/","c.dylib")
+    const C_LIBQ =  joinpath(@__DIR__,"..","deps/","c.dylib")
 else
     const C_LIBQ = "" 
 end
