@@ -22,7 +22,7 @@ function access_value(k_ptr::K_lib.K)
         access_dict(k_ptr)
     elseif type_int == -128 # type is an error
         error_str = K_lib.xs(k_ptr)
-        # TODO: make an actual error type
+        # TODO: make a Q error type
         error("q error: '" * error_str)
     elseif type_int in 77:112 # is a function or primitive
         return nothing
@@ -32,9 +32,6 @@ function access_value(k_ptr::K_lib.K)
 end
 
 # == Conversion from C types into Julia types
-#TODO: cover case of K nulls for each CType (i.e. 0Ni = typemin(Int32), 0nf=NaN)
-#TODO: cover case of missings (here and in jl_to_k)
-
 
 # treat case of missings depending on C type
 convert_katom_cval(cval, t::KAtomType) = _convert_katom_cval(cval,t)
@@ -57,10 +54,10 @@ const KTypeNaiveAtomConvert = Union{Bool,Symbol,Char,Minute,Second}
 _convert_katom_cval(cval, ::KAtomType{<:Any,<:Any,Jl}) where {Jl<:KTypeNaiveAtomConvert} = Jl(cval)
 
 # custom conversion for date and time types
-_convert_katom_cval(ns::K_lib.J, ::KAtomType{12}) = NanoDate(2000) + Nanosecond(ns)
+_convert_katom_cval(ns::K_lib.J, ::KAtomType{12}) = TimeDate(2000) + Nanosecond(ns)
 _convert_katom_cval(nmonths::K_lib.I, ::KAtomType{13}) = Date(2000) + Month(nmonths)
 _convert_katom_cval(ndays::K_lib.I, ::KAtomType{14}) = Date(2000) + Day(ndays)
-_convert_katom_cval(df::K_lib.F, ::KAtomType{15}) = NanoDate(2000) + Day(floor(df)) + Nanosecond(floor(mod(df, 1) * NanoDates.NanosecondsPerDay))
+_convert_katom_cval(df::K_lib.F, ::KAtomType{15}) = TimeDate(2000) + Day(floor(df)) + Nanosecond(floor(mod(df, 1) * NANOSECONDSPERDAY))
 _convert_katom_cval(ns::K_lib.J, ::KAtomType{16}) = Time(0) + Nanosecond(ns)
 _convert_katom_cval(ms::K_lib.I, ::KAtomType{19}) = Time(0) + Millisecond(ms)
 

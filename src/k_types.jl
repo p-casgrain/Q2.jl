@@ -49,7 +49,6 @@ end
 struct KAtomType{I,TC,TJ} end
 
 # Store the known atomic types
-# TODO: turn these into instances
 const ATOM_TYPES = (
     KAtomType{1,K_lib.G,Bool}(),
     KAtomType{2,K_lib.U,UInt128}(), # not yet implemented
@@ -62,10 +61,10 @@ const ATOM_TYPES = (
     KAtomType{9,K_lib.F,Float64}(),
     KAtomType{10,K_lib.G,Char}(),
     KAtomType{11,K_lib.S,Symbol}(),
-    KAtomType{12,K_lib.J,NanoDate}(),
+    KAtomType{12,K_lib.J,TimeDate}(),
     KAtomType{13,K_lib.I,Date}(),
     KAtomType{14,K_lib.I,Date}(),
-    KAtomType{15,K_lib.F,NanoDate}(),
+    KAtomType{15,K_lib.F,TimeDate}(),
     KAtomType{16,K_lib.J,Time}(),
     KAtomType{17,K_lib.I,Minute}(),
     KAtomType{18,K_lib.I,Second}(),

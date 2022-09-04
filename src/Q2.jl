@@ -2,7 +2,6 @@ module Q2
 
 using Tables
 using Missings
-using NanoDates
 using TimesDates
 using Dates
 
@@ -11,6 +10,8 @@ using Base.Iterators: enumerate, zip, flatten
 
 export KDBHandle, KDBConnection
 export open, close, execute
+
+const NANOSECONDSPERDAY = 86400000000000
 
 include("k_lib.jl") # interface to KDB C API
 include("k_types.jl") # K objects in Julia

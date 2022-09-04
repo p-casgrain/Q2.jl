@@ -74,7 +74,7 @@ jl_to_katom_cval(x) = x
 jl_to_katom_cval(x::Date) = Dates.days(x - Date(2000))
 jl_to_katom_cval(x::Time) = Dates.toms(x.instant)
 jl_to_katom_cval(x::Dates.AbstractTime) = Dates.tons(x)
-jl_to_katom_cval(x::T) where {T<:Union{Dates.AbstractDateTime,TimeDate,NanoDate}} = Dates.tons(x - T(Date(2000)))
+jl_to_katom_cval(x::T) where {T<:Union{Dates.AbstractDateTime,TimeDate}} = Dates.tons(x - T(Date(2000)))
 
 
 # == Convert Julia object to K Object
@@ -87,7 +87,7 @@ end
 
 jl_to_katomvec_cval(x) = x
 
-function jl_to_katomvec_cval(x::AbstractVector{T}) where {T<:Union{Time,Date,TimeDate,NanoDate,Dates.AbstractDateTime}}
+function jl_to_katomvec_cval(x::AbstractVector{T}) where {T<:Union{Time,Date,TimeDate,Dates.AbstractDateTime}}
     jl_to_katom_cval.(x)
 end
 
