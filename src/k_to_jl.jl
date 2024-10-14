@@ -70,16 +70,26 @@ function convert_katom_cvec(cvec, t::KAtomType{11}) # symbol vector conversion
     return [convert_katom_cval(unsafe_string(x),t) for x in cvec]
 end
 
-const KTypeNaiveVectorConvertNoMissing = Union{Symbol,Char} # for these, broadcast atom conversion
+convert_katom_cvec(cvec, t::KAtomType{12,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
+convert_katom_cvec(cvec, t::KAtomType{13,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
+convert_katom_cvec(cvec, t::KAtomType{14,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
+convert_katom_cvec(cvec, t::KAtomType{15,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
+convert_katom_cvec(cvec, t::KAtomType{16,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
+convert_katom_cvec(cvec, t::KAtomType{19,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
+
+
+# const KTypeNaiveVectorConvertNoMissing = Union{Symbol,Char} # for these, broadcast atom conversion
 # const KTypeNaiveVectorConvertWithMissing = Union{Minute,Second,TimeDate,NanoDate,Date,Time}
 
-function convert_katom_cvec(cvec, t::KAtomType{<:Any,<:Any,JT}) where {JT<:KTypeNaiveVectorConvertNoMissing}
-    return JT[convert_katom_cval(x, t) for x in cvec]
-end
+# TODO: A UNCOMMENT THIS?
+# function convert_katom_cvec(cvec, t::KAtomType{<:Any,<:Any,JT}) where {JT<:KTypeNaiveVectorConvertNoMissing}
+#     return JT[convert_katom_cval(x, t) for x in cvec]
+# end
 
-function convert_katom_cvec(cvec, t::KAtomType{<:Any,T}) where {T<:KAtomTypesWithMissing}
-    return [convert_katom_cval(x, t) for x in cvec]
-end
+# TODO: B UNCOMMENT THIS?
+# function convert_katom_cvec(cvec, t::KAtomType{<:Any,T}) where {T<:KAtomTypesWithMissing}
+#     return [convert_katom_cval(x, t) for x in cvec]
+# end
 
 # == Atom / Vector Value Access Functions
 
@@ -94,8 +104,9 @@ function access_atom_vec(k_ptr::K_lib.K, k_type::KAtomType)
 end
 
 function access_mixed_vec(k_ptr::K_lib.K)
-    k_vec = K_lib.kK(k_ptr) # a vector of K_lib.k objects
-    return access_value.(k_vec)
+    # k_ptr_iter = (K_lib.kK(k_ptr)) # a vector of K_lib.k objects
+    k_ptr_iter = ( upref!(K_Object(k,own=true)) for k in K_lib.kK(k_ptr) )
+    return access_value.(k_ptr_iter)
 end
 
 # == Access Dictionary

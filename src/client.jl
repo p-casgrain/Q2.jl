@@ -39,13 +39,16 @@ Handle will automatically close when garbage collected.
 """
 mutable struct KDBHandle
     handle::Int16
+    isopen::Bool
     function KDBHandle(x::Integer)
-        obj = new(x)
+        obj = new(x,true)
         finalizer(obj) do o
             hclose(o.handle)
         end
     end
 end
+
+Base.show(io::IO,h::KDBHandle) = print(io,"KDBHandle(h=$(h.handle),open=$(h.isopen))")
 
 """
     open(conn::KDBConnection)::KDBHandle
@@ -73,14 +76,20 @@ end
 function Base.open(f::Function, conn::KDBConnection)
     hobj = open(conn)
     return f(hobj)
+    close!(hobj)
 end
 
 """
-    close(conn::KDBConnection)
+    close!(conn::KDBHandle)
 
 Close a connection to a KDB instance.
 """
-close(c::KDBHandle) = hclose(c.handle)
+function close!(c::KDBHandle)
+    hclose(c.handle)
+    c.isopen = false
+end
+
+isopen(c::KDBHandle) = c.isopen
 
 """
     execute(hobj::KDBHandle, query::AbstractString, args...)
@@ -103,19 +112,21 @@ function execute(hobj::KDBHandle, query::AbstractString, args...; async = false)
     # if not async, continue normally
     checkhandleok(hobj.handle)
     # convert args to K values and execute in kdb instance
-    kargs_iter = (upref!(convert_jl_to_k(x)).k for x in args)
-    result = K_lib.k(hobj.handle, query, kargs_iter...)
+    kargs_iter = ( upref!(convert_jl_to_k(x)).k for x in args)
+    # result = K_lib.k(hobj.handle, query, kargs_iter..., K_lib.K_NULL)
     # convert back to native julia object
     if async
-        result = K_lib.k(-hobj.handle, query, kargs_iter...) # check send success?
+        result = K_lib.k(-hobj.handle, query, kargs_iter..., K_lib.K_NULL) # check send success?
         return nothing
     else
-        result = K_lib.k(hobj.handle, query, kargs_iter...)
+        result = K_lib.k(hobj.handle, query, kargs_iter..., K_lib.K_NULL)
         return access_value(K_Object(result))
     end
 end
 
 function execute(conn::KDBConnection, query::AbstractString, args...; async = false)
-    hobj = open(conn) # hobj will automatically close when gc'ed
-    return execute(hobj, query, args...; async=async)
+    hobj = open(conn)
+    res = execute(hobj, query, args...; async=async)
+    close!(hobj)
+    return res
 end

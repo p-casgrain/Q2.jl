@@ -7,20 +7,32 @@ This wrapper ensures that the K_Object is garbage collected.
 """
 mutable struct K_Object
     k::K_lib.K
-    function K_Object(k::K_lib.K)
-        # increment refcount
-        obj = new(k)
-        finalizer(obj) do o
-            K_lib.r0(o.k) # decrement refcount
+    isowned::Bool
+    function K_Object(k::K_lib.K;own::Bool=true)
+        # increment refcount ?
+        if own
+            # obj = new(K_lib.r1(k))
+            obj = new(k,own)
+            finalizer(obj) do o
+                K_lib.r0(o.k) # decrement refcount
+            end
+        else 
+            obj = new(k,own)
         end
+        return obj
     end
 end
 
 ktypeint(k::K_lib.K) = K_lib.xt(k)
 refcount(k::K_lib.K) = K_lib.xr(k)
+length(k::K_lib.K) = K_lib.xn(k)
 
 ktypeint(x::K_Object) = ktypeint(x.k)
 refcount(x::K_Object) = refcount(x.k)
+
+isatom(x::K_Object) = ktypeint(x.k) < 0
+length(x::K_Object) = length(x.k)
+
 
 function upref!(obj::K_Object)
     obj.k = K_lib.r1(obj.k)
@@ -34,7 +46,7 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", x::K_Object)
     type_num = ktypeint(x)
-    print(io, "K_Object( type=$type_num, refcount=$(refcount(x)))")
+    print(io, "K_Object( type=$type_num, refcount=$(refcount(x)) )")
 end
 
 # === K Atomic Types
@@ -131,13 +143,13 @@ function access_katomvec_cval(k::K_lib.K, ::KAtomType{<:Any,CT,<:Any}) where {CT
 end
 
 access_katomvec_cval(k::K_lib.K, ::Type{K_lib.C}) = K_lib.xp(k) # already copies
-access_katomvec_cval(k::K_lib.K, ::Type{K_lib.G}) = K_lib.kG(k) |> copy
-access_katomvec_cval(k::K_lib.K, ::Type{K_lib.H}) = K_lib.kH(k) |> copy
-access_katomvec_cval(k::K_lib.K, ::Type{K_lib.I}) = K_lib.kI(k) |> copy
-access_katomvec_cval(k::K_lib.K, ::Type{K_lib.J}) = K_lib.kJ(k) |> copy
-access_katomvec_cval(k::K_lib.K, ::Type{K_lib.E}) = K_lib.kE(k) |> copy
-access_katomvec_cval(k::K_lib.K, ::Type{K_lib.F}) = K_lib.kF(k) |> copy
-access_katomvec_cval(k::K_lib.K, ::Type{K_lib.S}) = K_lib.kS(k) |> copy
+access_katomvec_cval(k::K_lib.K, ::Type{K_lib.G}) = K_lib.kG(k) # |> copy
+access_katomvec_cval(k::K_lib.K, ::Type{K_lib.H}) = K_lib.kH(k) # |> copy
+access_katomvec_cval(k::K_lib.K, ::Type{K_lib.I}) = K_lib.kI(k) # |> copy
+access_katomvec_cval(k::K_lib.K, ::Type{K_lib.J}) = K_lib.kJ(k) # |> copy
+access_katomvec_cval(k::K_lib.K, ::Type{K_lib.E}) = K_lib.kE(k) # |> copy
+access_katomvec_cval(k::K_lib.K, ::Type{K_lib.F}) = K_lib.kF(k) # |> copy
+access_katomvec_cval(k::K_lib.K, ::Type{K_lib.S}) = K_lib.kS(k) # |> copy
 
 
 # == New C/K Value Initialization for K Atoms
@@ -172,3 +184,77 @@ function new_katomvec(x::Vector{T}, ::KAtomType{I,C}) where {I,C,T}
     unsafe_copy!(Ptr{C}(x + 16), pointer(jl_value_to_katomvec_cval(x)), n)
     return K_Object(x)
 end
+
+
+# === K Table Object, etc. ===
+
+struct KArray
+    kobj::K_Object
+    function KArray(kobj::K_Object)
+        t = ktypeint(kobj)
+        if not( (0 <= t) & (t <= 19)  )
+            error("must provide list type int (0-19). got type $t")
+        else
+            return new(kobj)
+        end
+    end
+end
+KArray(k::K_lib.K;own=true) = KArray(K_Object(k;own=own))
+ktypeint(x::KArray) = ktypeint(x.kobj)
+
+Base.IteratorSize(::Type{KArray}) = Base.HasLength()
+length(x::KArray) = length(x.kobj)
+Base.IteratorEltype(::Type{KArray}) = Base.HasEltype()
+eltype(::Type{KArray}) = Type{K_Object}
+
+isempty(x::KArray) = iszero(length(x))
+firstindex(x::KArray) = 1
+lastindex(x::KArray) = length(x)
+Base.getindex(x::KArray,i) = K_Object(K_lib.r1(K_lib.kK(x.k)[i]),own=true)
+
+
+# function iterate(x::KArray,state=1)
+#     (length(x)==0) & return nothing
+#     (state==length(x)) & return nothing
+#     return getindex(x,1), 2
+# end
+
+
+
+# TODO: access index, copy, _no assignment_
+
+struct KTable
+    kobj::K_Object
+    function KTable(kobj::K_Object)
+        #TODO: Check type or raise error (type <=0)
+        new(kobj)
+    end
+end
+KTable(k::K_lib.K) = KTable(K_Object(k))
+
+# names(m::KTable) = 
+# matrix(m::KTable) = 
+# lookup(m::KTable) = 
+# Tables.schema(m::MatrixTable{T}) where {T} = Tables.Schema(names(m), fill(eltype(T), size(matrix(m), 2)))
+
+# column interface
+Tables.istable(::Type{KTable}) = true
+Tables.columnaccess(::Type{<:KTable}) = true
+Tables.columns(m::KTable) = m
+# required Tables.AbstractColumns object methods
+# Tables.getcolumn(m::KTable, ::Type{T}, col::Int, nm::Symbol) where {T} = matrix(m)[:, col] #TODO: Implement this one
+Tables.getcolumn(m::KTable, nm::Symbol) = matrix(m)[:, lookup(m)[nm]]
+Tables.getcolumn(m::KTable, i::Int) = matrix(m)[:, i]
+Tables.columnnames(m::KTable) = names(m)
+
+
+
+struct KKeyTable
+    kobj::K_Object
+    function KKeyTable(kobj::K_Object)
+        #TODO: Check type or raise error (type <=0)
+        new(kobj)
+    end
+end
+KKeyTable(k::K_lib.K) = KKeyTable(K_Object(k))
+

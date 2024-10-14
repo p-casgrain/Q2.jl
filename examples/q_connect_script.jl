@@ -3,8 +3,9 @@ using Dates, TimesDates
 using DataFrames
 
 conn = KDBConnection(host="localhost", port=5555)
-
 x = execute(conn,".z.P")
+
+
 
 
 x = execute(conn,"{.dat.a:x}", NanoDate(now()))
@@ -19,7 +20,12 @@ tbl1 = open(conn) do h
 end
 
 
+using Q2
+using Q2.K_lib
+import Q2.K_lib
 
+
+h = Q2.hopen("localhost",5555)
 
 
 

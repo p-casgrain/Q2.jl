@@ -9,7 +9,9 @@ using Base: IteratorSize, IteratorEltype, HasLength, HasShape, IsInfinite, SizeU
 using Base.Iterators: enumerate, zip, flatten
 
 export KDBHandle, KDBConnection
-export open, close, execute
+export open, close!, execute
+
+export embed_init
 
 const NANOSECONDSPERDAY = 86400000000000
 
@@ -18,5 +20,9 @@ include("k_types.jl") # K objects in Julia
 include("jl_to_k.jl") # Convert Julia types to K objects
 include("k_to_jl.jl") # Convert K objects to Julia types
 include("client.jl") # Connection and interface with KDB
+
+if K_lib.IS_EMBEDDED_Q
+    include("embed.jl") # embedding into q process
+end
 
 end

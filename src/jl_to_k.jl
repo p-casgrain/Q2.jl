@@ -104,7 +104,7 @@ jl_to_kstring(x::AbstractString) = K_Object(K_lib.kp(x))
 # 4 - Everything else shoved into mixed vectors
 
 # get iterator element type and size
-jl_to_kvec(iter::T) where {T} = jl_to_kvec(iter, IteratorSize(T), eltype(T))
+jl_to_kvec(iter::T) where {T} = jl_to_kvec(iter, Base.IteratorSize(T), Base.eltype(T))
 
 # case of atomic vector with "atomic" elements
 function jl_to_kvec(iter::Vector{T}, ::HasLength, ::Type{T}) where {T<:JuliaAtomTypes}
@@ -113,7 +113,7 @@ function jl_to_kvec(iter::Vector{T}, ::HasLength, ::Type{T}) where {T<:JuliaAtom
     C = katom_ctype(KT)
     i = katom_typeint(KT)
     # Fill new K vector
-    n = length(iter)
+    n = Base.length(iter)
     k_obj = K_Object(K_lib.ktn(i, n))
     unsafe_copyto!(Ptr{C}(k_obj.k + 16), pointer(Vector{C}(jl_to_katomvec_cval(iter))), n)
     return k_obj
@@ -126,7 +126,7 @@ function jl_to_kvec(iter, ::HasLength, ::Type{T}) where {T<:JuliaAtomTypes}
     i = katom_typeint(KT)
     C = katom_ctype(KT)
     # Fill new K vector
-    k_obj = K_Object(K_lib.ktn(i, length(iter)))
+    k_obj = K_Object(K_lib.ktn(i, Base.length(iter)))
     for (i, z) in enumerate(iter)
         unsafe_store!(Ptr{C}(k_obj.k + 16), C(jl_to_katom_cval(z)), i)
     end
@@ -142,7 +142,7 @@ function jl_to_kvec(iter, ::HasLength, ::Type{Union{T,Missing}}) where {T<:Julia
     # Get missing value to fill with
     missing_val = katom_ctype_missingval(C)
     # Fill new K vector
-    k_obj = K_Object(K_lib.ktn(i, length(iter)))
+    k_obj = K_Object(K_lib.ktn(i, Base.length(iter)))
     for (i, z) in enumerate(iter)
         fillval = coalesce(jl_to_katom_cval(z), missing_val)
         unsafe_store!(Ptr{C}(k_obj.k + 16), C(fillval), i)
@@ -152,7 +152,7 @@ end
 
 # case of vector-like iterator of Symbols
 function jl_to_kvec(iter, ::HasLength, ::Type{Symbol})
-    k_obj = K_lib.ktn(K_lib.KS, length(iter)) |> K_Object
+    k_obj = K_lib.ktn(K_lib.KS, Base.length(iter)) |> K_Object
     for (i, x) in enumerate(iter)
         unsafe_store!(Ptr{K_lib.S}(k_obj.k + 16), K_lib.ss(x), i)
     end
@@ -172,15 +172,16 @@ function jl_to_kvec(iter, ::HasLength, ::Type{Union{String,Missing}})
 end
 
 # case of multi-dimensional iterator
+jl_to_kvec(iter, ::HasShape{0}, typ::Type{T}) where T = error("can't handle arguments with HasShape{0}: itertype=$(typeof(iter)) type=$T")
+jl_to_kvec(iter, ::HasShape{1}, typ::Type{T}) where T= jl_to_kvec(iter, HasLength(), typ)
 function jl_to_kvec(iter, ::HasShape{N}, typ::Type) where {N}
-    (N === 1) && return jl_to_kvec(iter, HasLength(), typ)
     slice_iter = eachslice(iter, dims=1)
     return jl_to_kvec(slice_iter, HasLength(), Any) # pass slice iter to generic mixed list constructor
 end
 
 # case of generic mixed vector
 # function jl_to_kvec(iter, ::HasLength, ::Type)
-#     n = length(iter)
+#     n = Base.length(iter)
 #     k_obj = K_Object(K_lib.ktn(0, n))
 #     for (i, x) in enumerate(iter)
 #         elem_k_obj = convert_jl_to_k(x) # increase ref count so that ownership is transferred
@@ -190,11 +191,11 @@ end
 # end
 
 function jl_to_kvec(iter, ::HasLength, ::Type)
-    n = length(iter)
-    k_obj = K_Object(K_lib.ktn(0, n))
+    n = Base.length(iter)
+    k_obj = upref!(K_Object(K_lib.ktn(0, n)))
     for (i, x) in enumerate(iter)
-        elem_k_obj = convert_jl_to_k(x) # increase ref count so that ownership is transferred
-        unsafe_store!(Ptr{K_lib.K}(k_obj.k + 16), upref!(elem_k_obj).k, i)
+        elem_k_obj = upref!(convert_jl_to_k(x)) # increase ref count so that ownership is transferred
+        unsafe_store!(Ptr{K_lib.K}(k_obj.k + 16), elem_k_obj.k, i)
     end
     return k_obj
 end

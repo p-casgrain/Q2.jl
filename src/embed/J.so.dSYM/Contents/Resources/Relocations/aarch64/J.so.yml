@@ -1,0 +1,11 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     J.so
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _qjl, symObjAddr: 0x0, symBinAddr: 0xB090, symSize: 0x68 }
+  - { offsetInCU: 0x4D, offset: 0x4D, size: 0x8, addend: 0x0, symName: _eos, symObjAddr: 0x1D30, symBinAddr: 0x16018, symSize: 0x0 }
+  - { offsetInCU: 0x204, offset: 0x204, size: 0x8, addend: 0x0, symName: _qjl, symObjAddr: 0x0, symBinAddr: 0xB090, symSize: 0x68 }
+  - { offsetInCU: 0x2BC, offset: 0x2BC, size: 0x8, addend: 0x0, symName: _J_init, symObjAddr: 0x68, symBinAddr: 0xB0F8, symSize: 0x18 }
+  - { offsetInCU: 0x334, offset: 0x334, size: 0x8, addend: 0x0, symName: _J_eval_string, symObjAddr: 0x80, symBinAddr: 0xB110, symSize: 0x2CC }
+  - { offsetInCU: 0x6AD, offset: 0x6AD, size: 0x8, addend: 0x0, symName: _J_atexit_hook, symObjAddr: 0x34C, symBinAddr: 0xB3DC, symSize: 0x4 }
+...
