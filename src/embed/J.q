@@ -1,28 +1,30 @@
-@[`.J;`init`eval_string`J_atexit_hook;:;(`:J 2:(`qjl;1))`.J[`init]:0b];
+
+`EMBEDJL_RUN_CMD setenv "push!(LOAD_PATH,\"$(ENV[\"HOME\"])/Github/Q2.jl/\");";
 \d .J
-
+/ dynamic load functions
+u_:(`:J 2:(`qjl;1))`;
+/ check if simple or non-simple startup required
+jl_cmdargs:" " vs neg[1]_ getenv`EMBEDJL_CMD_ARGS; / julia command line args (as one big string)
+jl_initcmd:neg[1]_ getenv`EMBEDJL_RUN_CMD;
+/ use_simple_init:all[""~/:(jl_cmdargs;jl_binloc)];
+use_simple_init:""~jl_cmdargs;
+init:$[use_simple_init;{.J.u_.init_simple[`]};{.J.u_.init[.J.jl_cmdargs;""]}];
+atexit:u_`atexit;
+e_:u_`eval_simple;
 if[(not `isinit in key `.J);.J.isinit:0b];
-if[not .J.isinit;.J.init[`];.J.isinit:1b]
+if[not .J.isinit;.J.init[];.J.isinit:1b];
 setenv[`IS_EMBEDDED_Q;"true"]
-
-/ push!(LOAD_PATH,"/Users/philippecasgrain/Github/Q2.jl/")
-repl:{[].J.eval_string "Base._start()"};
-
-
-/ eval_simple "Q2.__init__()";
-
-u_.makeWrapFunc:{[f]
-    callerfunc:{[f;params] f . params}f;
-    '[callerfunc;enlist]
-    };
-
-wrapfn:{[fn_name]
-    / wraps a julia function into a KDB function taking arbitrary number of args
-    if[not type[fn_name]~-11h;'type];
-    :.J.u_.makeWrapFunc e"Q2._wrap_function(",string[fn_name],",",string[floor nargs],")"
-    };
-
-
+/ REPL function
+repl:{[].J.e_ "Base._start()"};
+/ load Q2
+if[count jl_initcmd;e_ jl_initcmd,"; true"];
+.J.Q2_isinstalled:e_ "try\n using Q2;import Q2;using Q2.K_lib;true\n catch err\n show(err); false\n end";
+$[.J.Q2_isinstalled;[
+    / setup wrapper function
+    u_.fixenlist:{[x]:$[x~enlist[];enlist[::];(::),x]};
+    wrapfn:{[fn_str]if[type[fn_str]<>10h;'type];('[;]) over (u_.J_fn_wrap[fn_str;];u_.fixenlist;enlist)};
+ ];[
+    1 "warn: package Q2 is not installed in julia session. .J functionality severely limited.";
+    1 "tip : Use .J.repl[] to inspect session (ctrl+D to exit back to q session.)\n";
+ ]];
 \d .
-
-.J.eval_string "push!(LOAD_PATH,\"/Users/philippecasgrain/Github/Q2.jl/\")";

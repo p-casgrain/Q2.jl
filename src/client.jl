@@ -41,14 +41,14 @@ mutable struct KDBHandle
     handle::Int16
     isopen::Bool
     function KDBHandle(x::Integer)
-        obj = new(x,true)
+        obj = new(x, true)
         finalizer(obj) do o
             hclose(o.handle)
         end
     end
 end
 
-Base.show(io::IO,h::KDBHandle) = print(io,"KDBHandle(h=$(h.handle),open=$(h.isopen))")
+Base.show(io::IO, h::KDBHandle) = print(io, "KDBHandle(h=$(h.handle),open=$(h.isopen))")
 
 """
     open(conn::KDBConnection)::KDBHandle
@@ -108,12 +108,14 @@ Examples:
     execute(conn, "([] w:10?(0nj,til 3) ;x:10?1f ; y:10?(12;1b;`foo;\"bar\") ; z:10?`3)")
 ```
 """
-function execute(hobj::KDBHandle, query::AbstractString, args...; async = false)
+function execute(hobj::KDBHandle, query::AbstractString, args...; async=false)
     # if not async, continue normally
     checkhandleok(hobj.handle)
+    async && return error("argument async==true not supported")
+    !(hobj.isopen) && error("provided connection handle is not open")
     # convert args to K values and execute in kdb instance
-    kargs_iter = ( upref!(convert_jl_to_k(x)).k for x in args)
-    # result = K_lib.k(hobj.handle, query, kargs_iter..., K_lib.K_NULL)
+    kargs_iter = (upref!(convert_jl_to_k(x)).k for x in args)
+    result = K_lib.k(hobj.handle, query, kargs_iter..., K_lib.K_NULL)
     # convert back to native julia object
     if async
         result = K_lib.k(-hobj.handle, query, kargs_iter..., K_lib.K_NULL) # check send success?
@@ -124,7 +126,7 @@ function execute(hobj::KDBHandle, query::AbstractString, args...; async = false)
     end
 end
 
-function execute(conn::KDBConnection, query::AbstractString, args...; async = false)
+function execute(conn::KDBConnection, query::AbstractString, args...; async=false)
     hobj = open(conn)
     res = execute(hobj, query, args...; async=async)
     close!(hobj)

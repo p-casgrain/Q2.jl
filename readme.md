@@ -11,30 +11,33 @@ The package exports the types `KDBConnection` and `KDBHandle`, as well as the fu
 
 ## Examples
 
-```
+```julia
 using Q2
 conn = KDBConnection(host="localhost", port=5555)
 
+# one method of opening connections
 h = open(conn)
-execute(h, "1 + til 10")
-execute(h, "([]s:`a`b`c;a:11 22 33)")
-execute(h, "10?(0nf,10?1f)")
-close(h)
+mytable = execute(h,"n:`int\$1e3;([]a:n?100;b:n?1000f;c:n?`4)")
+mylist1 = execute(h, "1 + til 10")
+mylist2 = execute(h, "10?(0nf,10?1f)")
+myatom1 = execute(h, ".z.P")
+close!(h)
 
-using DataFrames
-tbl = DataFrame(x=randn(10),y=rand([:A,:B,:X],10))
+# another method of opening connections (opens and closes automatically)
+tbl = DataFrame(x=randn(500),y=rand([:A,:B,:X],500))
 open(conn) do h
-    execute(h,"{.dat.mytbl:x}",tbl) # send table to kdb
-    execute(h,".dat.mytbl") |> DataFrame # get the table back
+    execute(h,"show",tbl) # send table to kdb + display it
+    execute(h,"{til[10],x}",[1,2,3,:abcd,missing,nothing,[:paul,:john,:george,:ringo]])
 end
 
 ```
 
+
 ## Type Conversions from KDB
 
-| **kdb/q**     	| **Julia from KDB**                        	| **Julia to KDB**                                              	|
-|---------------	|-------------------------------------------	|---------------------------------------------------------------	|
-| `boolean`     	| `Bool`                                    	| `Bool`                                                        	|
+| **kdb/q type**    | **Received from KDB**                         | **Sent From Julia**                                               |
+|:---------------	|:-------------------------------------------	|:---------------------------------------------------------------	|
+| `bool`     	    | `Bool`                                    	| `Bool`                                                        	|
 | `byte`        	| `UInt8`                                   	| `UInt8`                                                       	|
 | `short`       	| `Int16`                                   	| `Int16`                                                       	|
 | `int`         	| `Int32`                                   	| `Int32`                                                       	|
@@ -56,3 +59,4 @@ end
 | `dictionary`  	| `Dictionary{Symbol,Any}`                  	| `<:AbstractDictionary`                                        	|
 | `atomic list` 	| `Vector{T}` or `Vector{Union{T,Missing}}` 	| Any iterator with `eltype` equal to `T` or `Union{T,Missing}` 	|
 | `mixed list`  	| `Vector{Any}`                             	| Any iterator with `eltype = Any`                              	|
+| `functions`     	| Unsupported                                	| Unsupported                                                     	|

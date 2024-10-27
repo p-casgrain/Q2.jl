@@ -35,14 +35,16 @@ convert_jl_to_k(x::T) where {T} = convert_jl_to_k(jl_to_kconvertmode(T), x)
 convert_jl_to_k(::KConvertAtom, x) = jl_to_katom(x)
 convert_jl_to_k(::KConvertString, x) = jl_to_kstring(x)
 convert_jl_to_k(::KConvertVector, x) = jl_to_kvec(x)
-convert_jl_to_k(::KConvertDict, x) = jl_to_dict(x)
-convert_jl_to_k(::KConvertTable, x) = jl_to_table(x)
+convert_jl_to_k(::KConvertDict, x) = jl_to_kdict(x)
+convert_jl_to_k(::KConvertTable, x) = jl_to_ktable(x)
 
-
-function convert_jl_to_k(::T, ::Type{KConvertUnknown}) where {T}
+function convert_jl_to_k(::KConvertUnknown, ::T) where {T}
     error("Q.jl does not know how to convert type $T to a K_Object")
 end
 
+function convert_jl_to_k(::KConvertUnknown,::T) where T<:Union{Missing,Nothing,Ptr{Nothing}}
+    return K_Object(K_lib.ktj(101, 0))
+end
 
 # === Converting Atoms to K Objects ===
 
@@ -152,7 +154,7 @@ end
 
 # case of vector-like iterator of Symbols
 function jl_to_kvec(iter, ::HasLength, ::Type{Symbol})
-    k_obj = K_lib.ktn(K_lib.KS, Base.length(iter)) |> K_Object
+    k_obj = K_Object( K_lib.ktn(K_lib.KS, Base.length(iter)) )
     for (i, x) in enumerate(iter)
         unsafe_store!(Ptr{K_lib.S}(k_obj.k + 16), K_lib.ss(x), i)
     end
@@ -171,8 +173,8 @@ function jl_to_kvec(iter, ::HasLength, ::Type{Union{String,Missing}})
     return jl_to_kvec(new_iter, HasLength(), String)
 end
 
-# case of multi-dimensional iterator
-jl_to_kvec(iter, ::HasShape{0}, typ::Type{T}) where T = error("can't handle arguments with HasShape{0}: itertype=$(typeof(iter)) type=$T")
+# case of multi-dimensional iterators -> drop to lower dimensional slices
+jl_to_kvec(iter, ::HasShape{0}, typ::Type{T}) where T = error("Q2.jl error: can't handle arguments with HasShape{0}: itertype=$(typeof(iter)) type=$T")
 jl_to_kvec(iter, ::HasShape{1}, typ::Type{T}) where T= jl_to_kvec(iter, HasLength(), typ)
 function jl_to_kvec(iter, ::HasShape{N}, typ::Type) where {N}
     slice_iter = eachslice(iter, dims=1)
@@ -180,19 +182,9 @@ function jl_to_kvec(iter, ::HasShape{N}, typ::Type) where {N}
 end
 
 # case of generic mixed vector
-# function jl_to_kvec(iter, ::HasLength, ::Type)
-#     n = Base.length(iter)
-#     k_obj = K_Object(K_lib.ktn(0, n))
-#     for (i, x) in enumerate(iter)
-#         elem_k_obj = convert_jl_to_k(x) # increase ref count so that ownership is transferred
-#         unsafe_store!(Ptr{K_lib.K}(k_obj.k + 16), upref!(elem_k_obj).k, i)
-#     end
-#     return k_obj
-# end
-
 function jl_to_kvec(iter, ::HasLength, ::Type)
     n = Base.length(iter)
-    k_obj = upref!(K_Object(K_lib.ktn(0, n)))
+    k_obj = K_Object(K_lib.ktn(0, n))
     for (i, x) in enumerate(iter)
         elem_k_obj = upref!(convert_jl_to_k(x)) # increase ref count so that ownership is transferred
         unsafe_store!(Ptr{K_lib.K}(k_obj.k + 16), elem_k_obj.k, i)
@@ -200,8 +192,7 @@ function jl_to_kvec(iter, ::HasLength, ::Type)
     return k_obj
 end
 
-
-jl_to_kvec(_, T::Union{IsInfinite,SizeUnknown}, _) = error("Q.jl error: Cannot convert an iterator with IteratorSize $T to K_Object")
+jl_to_kvec(_, T::Union{IsInfinite,SizeUnknown}, _) = error("Q2.jl error: Cannot convert an iterator with IteratorSize $T to K_Object")
 
 # === Converting Dictionaries to K Objects ===
 
@@ -209,7 +200,7 @@ keys2sym(k::T) where {T} = keys2sym(eltype(T), k)
 keys2sym(::Type{Symbol}, k) = k
 keys2sym(::Type{T}, k) where {T} = Symbol.(k)
 
-function jl_to_dict(dict::AbstractDict)
+function jl_to_kdict(dict::AbstractDict)
     keys_obj = convert_jl_to_k(keys(dict) |> keys2sym)
     values_obj = convert_jl_to_k(values(dict))
     return K_lib.xD(upref!(keys_obj).k, upref!(values_obj).k) |> K_Object
@@ -217,8 +208,8 @@ end
 
 # === Converting Tables to K Objects ===
 
-# converts any Tables.jl interface
-function jl_to_table(table)
+# converts from any Tables.jl interface
+function jl_to_ktable(table)
     colnames = convert_jl_to_k(Tables.columnnames(table))
     coldata = jl_to_kvec(Tables.columns(table))
     return K_lib.xD(upref!(colnames).k, upref!(coldata).k) |> K_lib.xT |> K_Object

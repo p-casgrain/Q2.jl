@@ -25,10 +25,8 @@ if IS_EMBEDDED_Q  # Get q C API from the current process
         fn_name
     end
 else
-    # global const C_LIBQ = kdb_c_api_jll.kdb_c_so
     macro k_sym(sym)
-        # kdb_c_api_jll.kdb_c_so
-        return :(($(sym),"/Users/philippecasgrain/bin/kdb/c/m64/c.dylib"))
+        return :(($(sym),kdb_c_api_jll.kdb_c_so))
     end
 end
 
@@ -242,10 +240,10 @@ r0(arg1) = ccall(@k_sym(:r0), V, (K,), arg1)
 r1(arg1) = ccall(@k_sym(:r1), K, (K,), arg1)
 
 # === Define k function for up to 8 arguments
-"""execute string query on handle h, with up to 8 arguments
+# """execute string query on handle h, with up to 8 arguments
 
-"""
-k
+# """
+# k
 for i in 1:8
     fn_args = [Symbol("x", j) for j in 1:i]
     typed_args = collect(Expr(:(::), x, :(K)) for x in fn_args)
@@ -263,13 +261,16 @@ sn(arg1, arg2) = ccall(@k_sym(:sn), S, (S, I), arg1, arg2)
 ss(arg1) = ccall(@k_sym(:ss), S, (S,), arg1)
 ee(arg1) = ccall(@k_sym(:ee), K, (K,), arg1)
 sd1(arg1, arg2) = ccall(@k_sym(:sd1), K, (I, Ptr{Cvoid}), arg1, arg2)
-dl(f, arg1) = ccall(@k_sym(:dl), K, (Ptr{V}, J), f, arg1)
 xT(arg1) = ccall(@k_sym(:xT), K, (K,), arg1)
 xD(arg1, arg2) = ccall(@k_sym(:xD), K, (K, K), arg1, arg2)
 orr(arg1) = ccall(@k_sym(:orr), K, (S,), arg1)
 dot(arg1, arg2) = ccall(@k_sym(:dot), K, (K, K), arg1, arg2)
 sslInfo(x) = ccall(@k_sym(:sslInfo), K, (K,), x)
 krr(x) = ccall(@k_sym(:krr), K, (S,), x)
+
+if IS_EMBEDDED_Q
+    dl(f, arg1) = ccall(@k_sym(:dl), K, (Ptr{V}, J), f, arg1)
+end
 
 # === Define Nulls and Infinities
 const nh = typemin(H)

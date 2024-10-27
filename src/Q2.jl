@@ -4,6 +4,8 @@ using Tables
 using Missings
 using TimesDates
 using Dates
+using DataFrames
+using REPL
 
 using Base: IteratorSize, IteratorEltype, HasLength, HasShape, IsInfinite, SizeUnknown
 using Base.Iterators: enumerate, zip, flatten
@@ -11,7 +13,7 @@ using Base.Iterators: enumerate, zip, flatten
 export KDBHandle, KDBConnection
 export open, close!, execute
 
-export embed_init
+export q, GLOBAL_VARDCT
 
 const NANOSECONDSPERDAY = 86400000000000
 

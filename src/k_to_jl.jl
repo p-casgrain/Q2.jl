@@ -22,10 +22,10 @@ function access_value(k_ptr::K_lib.K)
         access_dict(k_ptr)
     elseif type_int == -128 # type is an error
         error_str = K_lib.xs(k_ptr)
-        # TODO: make a Q error type
         error("q error: '" * error_str)
     elseif type_int in 77:112 # is a function or primitive
         return nothing
+        # return error("conversion from q function ensupported")
     else
         return error("Unsupported K type integer $type_int")
     end
@@ -36,17 +36,6 @@ end
 # treat case of missings depending on C type
 convert_katom_cval(cval, t::KAtomType) = _convert_katom_cval(cval,t)
 
-function convert_katom_cval(cval, t::KAtomType{11})
-    (cval === "") && return missing
-    return _convert_katom_cval(cval, t)
-end
-
-function convert_katom_cval(cval, t::KAtomType{<:Any,T}) where {T<:KAtomTypesWithMissing}
-    (cval === katom_ctype_missingval(T)) && return missing
-    return _convert_katom_cval(cval, t)
-end
-
-
 _convert_katom_cval(cval, ::KAtomType) = cval
 
 # naive conversion for some types
@@ -54,6 +43,7 @@ const KTypeNaiveAtomConvert = Union{Bool,Symbol,Char,Minute,Second}
 _convert_katom_cval(cval, ::KAtomType{<:Any,<:Any,Jl}) where {Jl<:KTypeNaiveAtomConvert} = Jl(cval)
 
 # custom conversion for date and time types
+_convert_katom_cval(x, ::KAtomType{1}) = Bool(x)
 _convert_katom_cval(ns::K_lib.J, ::KAtomType{12}) = TimeDate(2000) + Nanosecond(ns)
 _convert_katom_cval(nmonths::K_lib.I, ::KAtomType{13}) = Date(2000) + Month(nmonths)
 _convert_katom_cval(ndays::K_lib.I, ::KAtomType{14}) = Date(2000) + Day(ndays)
@@ -64,32 +54,22 @@ _convert_katom_cval(ms::K_lib.I, ::KAtomType{19}) = Time(0) + Millisecond(ms)
 # == Conversion for vectors
 
 # no conversion by default
-convert_katom_cvec(cvec, ::KAtomType) = cvec
+convert_katom_cvec(cvec, t::KAtomType) = fillmissing_kvec_(convert_katom_cvec_(cvec,t),t)
 
-function convert_katom_cvec(cvec, t::KAtomType{11}) # symbol vector conversion
+convert_katom_cvec_(cvec, ::KAtomType) = cvec
+
+function convert_katom_cvec_(cvec, t::KAtomType{11}) # symbol vector conversion
     return [convert_katom_cval(unsafe_string(x),t) for x in cvec]
 end
 
-convert_katom_cvec(cvec, t::KAtomType{12,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
-convert_katom_cvec(cvec, t::KAtomType{13,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
-convert_katom_cvec(cvec, t::KAtomType{14,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
-convert_katom_cvec(cvec, t::KAtomType{15,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
-convert_katom_cvec(cvec, t::KAtomType{16,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
-convert_katom_cvec(cvec, t::KAtomType{19,<:Any,JT}) where JT<:Any = JT[convert_katom_cval(x, t) for x in cvec]
+convert_katom_cvec_(cvec, t::T) where T<:Union{KAtomType{12},KAtomType{13},KAtomType{14},KAtomType{15},KAtomType{16},KAtomType{19}} = (x -> convert_katom_cval(x, t)).(cvec)
 
-
-# const KTypeNaiveVectorConvertNoMissing = Union{Symbol,Char} # for these, broadcast atom conversion
-# const KTypeNaiveVectorConvertWithMissing = Union{Minute,Second,TimeDate,NanoDate,Date,Time}
-
-# TODO: A UNCOMMENT THIS?
-# function convert_katom_cvec(cvec, t::KAtomType{<:Any,<:Any,JT}) where {JT<:KTypeNaiveVectorConvertNoMissing}
-#     return JT[convert_katom_cval(x, t) for x in cvec]
-# end
-
-# TODO: B UNCOMMENT THIS?
-# function convert_katom_cvec(cvec, t::KAtomType{<:Any,T}) where {T<:KAtomTypesWithMissing}
-#     return [convert_katom_cval(x, t) for x in cvec]
-# end
+fillmissing_kvec_(cvec,::KAtomType) = cvec
+function fillmissing_kvec_(cvec, t::KAtomType{<:Any,T}) where {T<:KAtomTypesWithMissing}
+    repl_val = convert_katom_cval(katom_ctype_missingval(T),t)
+    (repl_val ∈ cvec) && replace!(cvec,repl_val => missing)
+    return cvec
+end
 
 # == Atom / Vector Value Access Functions
 
@@ -104,7 +84,6 @@ function access_atom_vec(k_ptr::K_lib.K, k_type::KAtomType)
 end
 
 function access_mixed_vec(k_ptr::K_lib.K)
-    # k_ptr_iter = (K_lib.kK(k_ptr)) # a vector of K_lib.k objects
     k_ptr_iter = ( upref!(K_Object(k,own=true)) for k in K_lib.kK(k_ptr) )
     return access_value.(k_ptr_iter)
 end
@@ -112,7 +91,7 @@ end
 # == Access Dictionary
 
 function access_dict(k_ptr::K_lib.K)
-    key_k, value_k = K_lib.kK(k_ptr) # 2-elem vec K_lib.k objects
+    key_k, value_k = K_lib.kK(k_ptr)
     key_type = ktypeint(key_k)
     if key_type == 11 # it's a standard dictionary
         key_jl, value_jl = access_value(key_k), access_value(value_k)
@@ -128,9 +107,9 @@ end
 
 function access_table(k_ptr::K_lib.K)
     newptr = unsafe_load(k_ptr.k)
-    key_k, value_k = K_lib.kK(newptr) # 2-elem vec K_lib.k objects
+    key_k, value_k = K_lib.kK(newptr)
     key_jl, value_jl = access_value(key_k), access_value(value_k)
-    return (; zip(key_jl, value_jl)...) # returns NamedTuple
+    return DataFrame((;zip(key_jl, value_jl)...);copycols=false)
 end
 
 
@@ -139,15 +118,15 @@ end
 function access_keyed_table(key_k_ptr::K_lib.K, value_k_ptr::K_lib.K)
     # Load the key data
     newptr0 = unsafe_load(key_k_ptr.k)
-    key_k0, value_k0 = K_lib.kK(newptr0) # 2-elem vec K_lib.k objects
+    key_k0, value_k0 = K_lib.kK(newptr0)
     key_jl0, value_jl0 = access_value(key_k0), access_value(value_k0)
     # Load the value data
     newptr1 = unsafe_load(value_k_ptr.k)
-    key_k1, value_k1 = K_lib.kK(newptr1) # 2-elem vec K_lib.k objects
+    key_k1, value_k1 = K_lib.kK(newptr1)
     key_jl1, value_jl1 = access_value(key_k1), access_value(value_k1)
-    # Jam it into a K_Table object
+    # Jam it into a K Table object
     key_iter = flatten((key_jl0, key_jl1))
     val_iter = flatten((value_jl0, value_jl1))
-    return (; zip(key_iter, val_iter)...) # returns NamedTuple
+    return DataFrame((; zip(key_iter, val_iter)...),copycols=false) # returns NamedTuple
 end
 
