@@ -1,6 +1,6 @@
 # Q2.jl
 
-This package serves as an interface between Julia and [q/kdb](https://code.kx.com/q/) (similar to [rkdb](https://github.com/KxSystems/rkdb)) so that commands and data can be sent to a remote kdb session and vice versa. The package serves as a replacement to the unmaintained [Q.jl](https://github.com/enlnt/Q.jl) with the main difference being fewer dependencies and a more minimal set of features. It includes two parts. First is the Julia interface, which lets a Julia process connect to a q/kdb server and exchange data. The second is a kdb interface  `J.q` which allows julia to be run from within a kdb/q process.
+This package serves as an interface between Julia and [q/kdb](https://code.kx.com/q/) (similar to [rkdb](https://github.com/KxSystems/rkdb)) so that commands and data can be sent to a remote kdb session and vice versa. The package serves as a replacement to the unmaintained and outdated [Q.jl](https://github.com/enlnt/Q.jl) with the main difference being fewer dependencies and a more minimal set of features, though with many elements ported over. It includes two parts. First is the Julia interface, which lets a Julia process connect to a q/kdb server and exchange data. The second is a kdb interface  `J.q` which allows julia to be run from within a kdb/q process.
 
 Currently only Mac and Linux have been tested and are known to be supported.
 
@@ -9,7 +9,7 @@ Currently only Mac and Linux have been tested and are known to be supported.
 The package exports the types `KDBConnection` and `KDBHandle`, as well as the functions `open`, `close!` and `execute`. Please see the function docstrings and examples below for more information.
 
 ### Installation
-This package isn't registered in the Julia package directory, so you can run `Pkg.add("https://github.com/p-casgrain/Q2.jl")` to install it to julia.
+Just run `using Pkg; Pkg.add(Q2)` as you would normally.
 
 ### Examples
 
