@@ -33,6 +33,11 @@ open(conn) do h
 end
 ```
 
+### General Notes
+ - Any null time or numeric value is converted to a `missing` when it is in an Atomic list. For example the list `0 2 3 0Nj` in q will converted to a `Union{Float64,Missing}[0,2,3,missing]`, however this conversion will not occur if this is a mixed list or an atom, since it is impossible to know the type of the `missing` value in these cases.
+ - Unsupported kdb types for conversions: GUIDs, Functions
+
+
 ## kdb/q interface
 
 Once installed (see below), run `\l J.q` to load the package. Julia session is started on package load.
@@ -44,7 +49,7 @@ This package contains the following functions:
  - `.J.repl[]` - launches the Julia REPL for current session. `ctrl+D` to close the REPL and go back to `q)`. Useful for debugging.
 
 ### Notes
-The first available julia binary available in the `PATH` will be used. Requires `Q2.jl` to be available for full functionality, warning will be given if not available.
+The first available julia binary available in the `PATH` will be used. Requires `Q2.jl` to be available for full functionality, warning will be given if not available. The conversion of objects between q and julia are done using `Q2.jl`, so the same conversion rules apply (see type conversions section).
 The following optional environment variables are read when loading the package
  - `EMBEDJL_CMD_ARGS` - string containing additional command arguments (example: `--threads auto --home=... -O 3`)
  - `EMBEDJL_RUN_CMD` - string containing commands to be run in julia directly after launch
@@ -97,6 +102,3 @@ fn[1;2;3;4]; fn[100?1f];                        / variable number of arguments
 | `functions`     	| Unsupported                                	| Unsupported                                                     	|
 
 
-### General Notes
- - Any null time or numeric value is converted to a `missing` when it is in an Atomic list. For example the list `0 2 3 0Nj` in q will converted to a `Union{Float64,Missing}[0,2,3,missing]`, however this conversion will not occur if this is a mixed list or an atom, since it is impossible to know the type of the `missing` value in these cases.
- - Unsupported kdb types for conversions: GUIDs, Functions
