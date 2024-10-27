@@ -1,5 +1,5 @@
 
-`EMBEDJL_RUN_CMD setenv "push!(LOAD_PATH,\"$(ENV[\"HOME\"])/Github/Q2.jl/\");";
+/ `EMBEDJL_RUN_CMD setenv "push!(LOAD_PATH,\"$(ENV[\"HOME\"])/Github/Q2.jl/\");";
 \d .J
 / dynamic load functions
 u_:(`:J 2:(`qjl;1))`;

@@ -13,7 +13,6 @@ using Base.Iterators: enumerate, zip, flatten
 export KDBHandle, KDBConnection
 export open, close!, execute
 
-export q, GLOBAL_VARDCT
 
 const NANOSECONDSPERDAY = 86400000000000
 
@@ -24,6 +23,7 @@ include("k_to_jl.jl") # Convert K objects to Julia types
 include("client.jl") # Connection and interface with KDB
 
 if K_lib.IS_EMBEDDED_Q
+    export q
     include("embed.jl") # embedding into q process
 end
 
