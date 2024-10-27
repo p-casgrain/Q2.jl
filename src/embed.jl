@@ -85,49 +85,6 @@ macro q(sym)
     end
 end
 
-function dictsubeval(s, dict)
-    pattern = r"@q\(([^)]+)\)"
-    processed = replace(s, pattern => m -> begin
-        var_name = Symbol(match(pattern, m).captures[1])
-        haskey(dict, var_name) ? "$(dict[var_name])" : m
-    end)
-    return processed
-end
-
-function _eval_string_args(eval_str_::K_lib.K,args_::K_lib.K)::K_lib.K
-
-    # load string and options
-    if K_lib.xt(eval_str_) != K_lib.KC
-        return K_lib.krr("type")
-    else
-        eval_str = K_lib.xp(eval_str_)
-    end
-
-    args_dict = try
-        if K_lib.xt(args_) == 99
-            access_value(upref!(K_Object(args_)))
-        else
-            Dict{Symbol,Bool}()
-        end
-    catch
-        return K_lib.krr("load_options")
-    end
-
-    v = try
-        dictsubeval(eval_str,args_dict)
-    catch err
-        return K_lib.krr("julia error: $err")
-    end
-
-    p = try
-        upref!(convert_jl_to_k(v)).k
-    catch err
-        return K_lib.krr("jl→q error: $err")
-    end
-    
-    return p
-end
-
 function _set(var_str_::K_lib.K,val_::K_lib.K)
     if K_lib.xt(var_str_) == K_lib.KC
         var_sym = Symbol(K_lib.xp(var_str_))
@@ -165,21 +122,11 @@ function __init__()
     _kfn = Q2.K_lib.dl(_cfn, 2)
     Q2.K_lib.k(0, "{.J.u_.J_fn_wrap:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
 
-    # advanced eval_str
-    _cfn = @cfunction(Q2._eval_string_args, Q2.K_lib.K, (Q2.K_lib.K,Q2.K_lib.K,))
-    _kfn = Q2.K_lib.dl(_cfn, 2)
-    Q2.K_lib.k(0, "{.J.eo:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
-
     # set variable
     _cfn = @cfunction(Q2._set , Q2.K_lib.K, (Q2.K_lib.K,Q2.K_lib.K,))
     _kfn = Q2.K_lib.dl(_cfn, 2)
     Q2.K_lib.k(0, "{.J.set:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
 
-    
-    # # function wrapper v2
-    # _cfn = @cfunction(Q2._load_function, Q2.K_lib.K, (Q2.K_lib.K,))
-    # _kfn = Q2.K_lib.dl(_cfn, 1)
-    # Q2.K_lib.k(0, "{.J.loadfn:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
 
     return nothing
 end
