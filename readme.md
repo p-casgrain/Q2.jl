@@ -56,7 +56,7 @@ The following optional environment variables are read when loading the package
 
 ### Installation
 
-`cd` into the `<root>/embed/` folder and run `make all && make install` to install the package. This will install the package into your `$QHOME`.
+Run `git clone https://github.com/p-casgrain/Q2.jl` somewhere, `cd` into the `../embed/` folder and run `make all && make install` to install the package. This will install the package into your `$QHOME`.
 
 ### Examples
 
