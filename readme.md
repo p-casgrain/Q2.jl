@@ -33,11 +33,6 @@ open(conn) do h
 end
 ```
 
-### General Notes
- - Any null time or numeric value is converted to a `missing` when it is in an Atomic list. For example the list `0 2 3 0Nj` in q will converted to a `Union{Float64,Missing}[0,2,3,missing]`, however this conversion will not occur if this is a mixed list or an atom, since it is impossible to know the type of the `missing` value in these cases.
- - Unsupported kdb types for conversions: GUIDs, Functions
-
-
 ## kdb/q interface
 
 Once installed (see below), run `\l J.q` to load the package. Julia session is started on package load.
@@ -98,7 +93,7 @@ fn[1;2;3;4]; fn[100?1f];                        / eval wrapped function with any
 | `time`         | `Dates.Time`                              |
 | `table`        | `DataFrame`                               |
 | `keyed table`  | `DataFrame`                               |
-| `dictionary`   | `Dictionary{Symbol,Any}`                  |
+| `dictionary`   | `Dictionary{Symbol,T}`                    |
 | `atomic list`  | `Vector{T}` or `Vector{Union{T,Missing}}` |
 | `mixed list`   | `Vector{Any}`                             |
 | `functions`    | Unsupported                               |
@@ -106,23 +101,29 @@ fn[1;2;3;4]; fn[100?1f];                        / eval wrapped function with any
 
 ## Julia $\rightarrow$ kdb/q
 
+| **Julia Type**                                                                                   | **Received by kdb/q** |
+| :----------------------------------------------------------------------------------------------- | :-------------------- |
+| `Bool`                                                                                           | `bool`                |
+| `UInt8`                                                                                          | `byte`                |
+| `Int16`                                                                                          | `short`               |
+| `Int32`                                                                                          | `int`                 |
+| `Int64`                                                                                          | `long`                |
+| `Float32`                                                                                        | `real`                |
+| `Float64`                                                                                        | `float`               |
+| `Char`                                                                                           | `char`                |
+| `String`                                                                                         | `string`              |
+| `Symbol`                                                                                         | `symbol`              |
+| `TimesDates.TimeDate`, `<:Dates.AbstractDateTime`                                                | `timestamp`           |
+| `Dates.Date`                                                                                     | `date`                |
+| `Dates.Time`                                                                                     | `timespan`            |
+| `<:AbstractDictionary`                                                                           | `dictionary`          |
+| Any table supporting `Tables.jl` interface <br> (e.g. `DataFrame`)                               | `table`               |
+| Any iterator with `eltype` equal to `T` or `Union{T,Missing}` <br> (e.g. `Array`,`Vector`, etc.) | `atomic list`         |
+| Any other iterator with `eltype <: Any`                                                          | `mixed list`          |
 
-| **Julia Type**                                                | **Received by kdb/q** |
-| :------------------------------------------------------------ | :-------------------- |
-| `Bool`                                                        | `bool`                |
-| `UInt8`                                                       | `byte`                |
-| `Int16`                                                       | `short`               |
-| `Int32`                                                       | `int`                 |
-| `Int64`                                                       | `long`                |
-| `Float32`                                                     | `real`                |
-| `Float64`                                                     | `float`               |
-| `Char`                                                        | `char`                |
-| `Symbol`                                                      | `symbol`              |
-| `TimesDates.TimeDate`, `<:Dates.AbstractDateTime`             | `timestamp`           |
-| `Dates.Date`                                                  | `date`                |
-| `Dates.Time`                                                  | `timespan`            |
-| `<:AbstractDictionary`                                        | `dictionary`          |
-| Any `Tables.jl` interface                                     | `table`               |
-| Any iterator with `eltype` equal to `T` or `Union{T,Missing}` | `atomic list`         |
-| Any iterator with `eltype = Any`                              | `mixed list`          |
+## Notes
+ - Additional types not explicitly listed above are also supported, as long as they can be implicitly converted into one of the above (i.e. `<:Real`,`<:Integer`, etc.)
+ - Any null time or numeric value is converted to a `missing` when it is in an Atomic list. For example the list `0 2 3 0Nj` in q will converted to a `Union{Float64,Missing}[0,2,3,missing]`, however this conversion will not occur if this is a mixed list or an atom, since it is impossible to know the type of the `missing` value in these cases.
+ - Unsupported kdb types for conversions: GUIDs, Functions. These may be converted to `nothing` when sent to Julia
+
 
