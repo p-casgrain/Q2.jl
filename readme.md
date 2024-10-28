@@ -64,11 +64,11 @@ Run `git clone https://github.com/p-casgrain/KdbConnect.jl` somewhere, `cd` into
 \l J.q
 
 .J.e "v=[1,2,3,4,5]; @show v";                  / run but don't return
-J) prod(1:10)                                   / does the same but without quotes or escapes
-x:.J.er "5.*v";                                 / eval and return
-fn:.J.wrapfn["sum"];                            / wrap some function
-fn[1;2;3;4]; fn[100?1f];                        / variable number of arguments
-.J.set["mylist";20?`4]; .J.e "@show mylist";    / move a variable into julia 
+J)prod(tanh.(1:100))                            / does the same but without quotes or escapes
+x:.J.er "5.*v";                                 / eval and return, save result to variable x
+fn:.J.wrapfn["sum"];                            / wrap a function (must be available in global Julia namespace)
+fn[1;2;3;4]; fn[100?1f];                        / eval wrapped function with any number of arguments
+.J.set["myqlist";20?`4]; .J.e "@show myqlist";  / assign variable in julia 
 ```
 
 
