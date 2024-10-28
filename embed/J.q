@@ -1,5 +1,3 @@
-
-/ `EMBEDJL_RUN_CMD setenv "push!(LOAD_PATH,\"$(ENV[\"HOME\"])/Github/KdbConnect.jl/\");";
 \d .J
 / dynamic load functions
 u_:(`:J 2:(`qjl;1))`;
