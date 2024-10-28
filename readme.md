@@ -73,32 +73,56 @@ fn[1;2;3;4]; fn[100?1f];                        / eval wrapped function with any
 
 
 
-## Type Conversions kdb/q $\longleftrightarrow$ Julia
+# Type Conversions
 
-| **kdb/q type**    | **Received from kdb/q**                         | **Sent From Julia**                                               |
-|:---------------	|:-------------------------------------------	|:---------------------------------------------------------------	|
-| `bool`     	    | `Bool`                                    	| `Bool`                                                        	|
-| `byte`        	| `UInt8`                                   	| `UInt8`                                                       	|
-| `short`       	| `Int16`                                   	| `Int16`                                                       	|
-| `int`         	| `Int32`                                   	| `Int32`                                                       	|
-| `long`        	| `Int64`                                   	| `Int64`                                                       	|
-| `real`        	| `Float32`                                 	| `Float32`                                                     	|
-| `float`       	| `Float64`                                 	| `Float64`                                                     	|
-| `char`        	| `Char`                                    	| `Char`                                                        	|
-| `symbol`      	| `Symbol`                                  	| `Symbol`                                                      	|
-| `timestamp`   	| `NanoDates.NanoDate`                      	| `TimesDates.TimeDate`, `<:Dates.AbstractDateTime`             	|
-| `month`       	| `Date`                                    	| NA                                                            	|
-| `date`        	| `Date`                                    	| `Dates.Date`                                                  	|
-| `datetime`    	| `NanoDates.NanoDate`                      	| NA                                                            	|
-| `timespan`    	| `Dates.Time`                              	| `Dates.Time`                                                  	|
-| `minute`      	| `Minute`                                  	| NA                                                            	|
-| `second`      	| `Second`                                  	| NA                                                            	|
-| `time`        	| `Dates.Time`                              	| NA                                                            	|
-| `table`       	| `DataFrame`                              	    | Any `Tables.jl` interface                                     	|
-| `keyed table` 	| `DataFrame`                              	    | NA                                                            	|
-| `dictionary`  	| `Dictionary{Symbol,Any}`                  	| `<:AbstractDictionary`                                        	|
-| `atomic list` 	| `Vector{T}` or `Vector{Union{T,Missing}}` 	| Any iterator with `eltype` equal to `T` or `Union{T,Missing}` 	|
-| `mixed list`  	| `Vector{Any}`                             	| Any iterator with `eltype = Any`                              	|
-| `functions`     	| Unsupported                                	| Unsupported                                                     	|
+## kdb/q $\rightarrow$ Julia
+ 
+| **kdb/q type** | **Received from kdb/q**                   |
+| :------------- | :---------------------------------------- |
+| `bool`         | `Bool`                                    |
+| `byte`         | `UInt8`                                   |
+| `short`        | `Int16`                                   |
+| `int`          | `Int32`                                   |
+| `long`         | `Int64`                                   |
+| `real`         | `Float32`                                 |
+| `float`        | `Float64`                                 |
+| `char`         | `Char`                                    |
+| `symbol`       | `Symbol`                                  |
+| `timestamp`    | `TimesDates.TimeDate`                     |
+| `month`        | `Date`                                    |
+| `date`         | `Date`                                    |
+| `datetime`     | `TimesDates.TimeDate`                     |
+| `timespan`     | `Dates.Time`                              |
+| `minute`       | `Minute`                                  |
+| `second`       | `Second`                                  |
+| `time`         | `Dates.Time`                              |
+| `table`        | `DataFrame`                               |
+| `keyed table`  | `DataFrame`                               |
+| `dictionary`   | `Dictionary{Symbol,Any}`                  |
+| `atomic list`  | `Vector{T}` or `Vector{Union{T,Missing}}` |
+| `mixed list`   | `Vector{Any}`                             |
+| `functions`    | Unsupported                               |
 
+
+## Julia $\rightarrow$ kdb/q
+
+
+| **Julia Type**                                                | **Received by kdb/q** |
+| :------------------------------------------------------------ | :-------------------- |
+| `Bool`                                                        | `bool`                |
+| `UInt8`                                                       | `byte`                |
+| `Int16`                                                       | `short`               |
+| `Int32`                                                       | `int`                 |
+| `Int64`                                                       | `long`                |
+| `Float32`                                                     | `real`                |
+| `Float64`                                                     | `float`               |
+| `Char`                                                        | `char`                |
+| `Symbol`                                                      | `symbol`              |
+| `TimesDates.TimeDate`, `<:Dates.AbstractDateTime`             | `timestamp`           |
+| `Dates.Date`                                                  | `date`                |
+| `Dates.Time`                                                  | `timespan`            |
+| `<:AbstractDictionary`                                        | `dictionary`          |
+| Any `Tables.jl` interface                                     | `table`               |
+| Any iterator with `eltype` equal to `T` or `Union{T,Missing}` | `atomic list`         |
+| Any iterator with `eltype = Any`                              | `mixed list`          |
 
