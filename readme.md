@@ -1,8 +1,8 @@
 # KdbConnect.jl
 
-This package serves as an interface between Julia and [q/kdb](https://code.kx.com/q/) (similar to [rkdb](https://github.com/KxSystems/rkdb)) so that commands and data can be sent to a remote kdb session and vice versa. The package serves as a replacement to the unmaintained and outdated [Q.jl](https://github.com/enlnt/Q.jl) with the main difference being fewer dependencies and a more minimal set of features, though with many elements ported over. It includes two parts. First is the Julia interface, which lets a Julia process connect to a q/kdb server and exchange data. The second is a kdb interface  `J.q` (like [embedPy](https://github.com/KxSystems/embedPy)) which allows julia to be run from within a kdb/q process.
+This package serves as an interface between Julia and [q/kdb](https://code.kx.com/q/) (similar to [rkdb](https://github.com/KxSystems/rkdb)) so that data can be sent to and received from a kdb session. It includes two parts. First is the Julia interface, which lets a Julia process connect to a q/kdb server and exchange data. The second is a kdb interface  `J.q` (like [embedPy](https://github.com/KxSystems/embedPy)) which allows julia to be run from within a kdb/q process.
 
-Currently only Mac and Linux have been tested and are known to be supported.
+**Note:** Currently only Mac and Linux have been tested and are known to be supported.
 
 ## Julia Interface
 
@@ -127,3 +127,6 @@ fn[1;2;3;4]; fn[100?1f];                        / eval wrapped function with any
  - Unsupported kdb types for conversions: GUIDs, Functions. These may be converted to `nothing` when sent to Julia
 
 
+# Acknowledgements
+
+The package design and many other aspects were based on the defunct [Q.jl](https://github.com/enlnt/Q.jl). This package aims to be a replacement, with the main difference being fewer dependencies and a more minimal set of features. 
