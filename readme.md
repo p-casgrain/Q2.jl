@@ -77,7 +77,7 @@ fn[1;2;3;4]; fn[100?1f];                        / eval wrapped function with any
 
 ## kdb/q $\rightarrow$ Julia
  
-| **kdb/q type** | **Received from kdb/q**                   |
+| **kdb/q type** | **Received by Julia**                     |
 | :------------- | :---------------------------------------- |
 | `bool`         | `Bool`                                    |
 | `byte`         | `UInt8`                                   |
