@@ -1,5 +1,5 @@
 
-/ `EMBEDJL_RUN_CMD setenv "push!(LOAD_PATH,\"$(ENV[\"HOME\"])/Github/QConnect.jl/\");";
+/ `EMBEDJL_RUN_CMD setenv "push!(LOAD_PATH,\"$(ENV[\"HOME\"])/Github/KdbConnect.jl/\");";
 \d .J
 / dynamic load functions
 u_:(`:J 2:(`qjl;1))`;
@@ -16,15 +16,15 @@ if[not .J.isinit;.J.init[];.J.isinit:1b];
 setenv[`IS_EMBEDDED_Q;"true"]
 / REPL function
 repl:{[].J.e_ "Base._start()"};
-/ load QConnect
+/ load KdbConnect
 if[count jl_initcmd;e_ jl_initcmd,"; true"];
-.J.QConnect_isinstalled:e_ "try\n using QConnect;import QConnect;using QConnect.K_lib;true\n catch err\n show(err); false\n end";
-$[.J.QConnect_isinstalled;[
+.J.KdbConnect_isinstalled:e_ "try\n using KdbConnect;import KdbConnect;using KdbConnect.K_lib;true\n catch err\n show(err); false\n end";
+$[.J.KdbConnect_isinstalled;[
     / setup wrapper function
     u_.fixenlist:{[x]:$[x~enlist[];enlist[::];(::),x]};
     wrapfn:{[fn_str]if[type[fn_str]<>10h;'type];('[;]) over (u_.J_fn_wrap[fn_str;];u_.fixenlist;enlist)};
  ];[
-    1 "warn: package QConnect is not installed in julia session. .J functionality severely limited.";
+    1 "warn: package KdbConnect is not installed in julia session. .J functionality severely limited.";
     1 "tip : Use .J.repl[] to inspect session (ctrl+D to exit back to q session.)\n";
  ]];
 \d .

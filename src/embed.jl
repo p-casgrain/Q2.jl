@@ -108,24 +108,24 @@ end
 function __init__()
     
     # eval string
-    _cfn = @cfunction(QConnect._eval_string_noreturn, QConnect.K_lib.K, (QConnect.K_lib.K,))
+    _cfn = @cfunction(KdbConnect._eval_string_noreturn, KdbConnect.K_lib.K, (KdbConnect.K_lib.K,))
     _kfn = K_lib.dl(_cfn, 1)
     K_lib.k(0, "{.J.e:x}",_kfn,K_lib.K_NULL) |> K_lib.r0
 
     # eval string
-    _cfn = @cfunction(QConnect._eval_string_return, QConnect.K_lib.K, (QConnect.K_lib.K,))
+    _cfn = @cfunction(KdbConnect._eval_string_return, KdbConnect.K_lib.K, (KdbConnect.K_lib.K,))
     _kfn = K_lib.dl(_cfn, 1)
     K_lib.k(0, "{.J.er:x}",_kfn,K_lib.K_NULL) |> K_lib.r0
 
     # function wrapper
-    _cfn = @cfunction(QConnect._eval_function, QConnect.K_lib.K, (QConnect.K_lib.K,QConnect.K_lib.K,))
-    _kfn = QConnect.K_lib.dl(_cfn, 2)
-    QConnect.K_lib.k(0, "{.J.u_.J_fn_wrap:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
+    _cfn = @cfunction(KdbConnect._eval_function, KdbConnect.K_lib.K, (KdbConnect.K_lib.K,KdbConnect.K_lib.K,))
+    _kfn = KdbConnect.K_lib.dl(_cfn, 2)
+    KdbConnect.K_lib.k(0, "{.J.u_.J_fn_wrap:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
 
     # set variable
-    _cfn = @cfunction(QConnect._set , QConnect.K_lib.K, (QConnect.K_lib.K,QConnect.K_lib.K,))
-    _kfn = QConnect.K_lib.dl(_cfn, 2)
-    QConnect.K_lib.k(0, "{.J.set:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
+    _cfn = @cfunction(KdbConnect._set , KdbConnect.K_lib.K, (KdbConnect.K_lib.K,KdbConnect.K_lib.K,))
+    _kfn = KdbConnect.K_lib.dl(_cfn, 2)
+    KdbConnect.K_lib.k(0, "{.J.set:x}", _kfn, K_lib.K_NULL) |> K_lib.r0
 
 
     return nothing

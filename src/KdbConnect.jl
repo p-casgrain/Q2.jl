@@ -1,4 +1,4 @@
-module QConnect
+module KdbConnect
 
 using Tables
 using Missings
@@ -10,9 +10,8 @@ using REPL
 using Base: IteratorSize, IteratorEltype, HasLength, HasShape, IsInfinite, SizeUnknown
 using Base.Iterators: enumerate, zip, flatten
 
-export KDBHandle, KDBConnection
+export KdbHandle, KdbConnectionInfo
 export open, close!, execute
-
 
 const NANOSECONDSPERDAY = 86400000000000
 

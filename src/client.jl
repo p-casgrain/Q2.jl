@@ -17,13 +17,13 @@ function checkhandleok(x::Integer)
 end
 
 """
-    KDBConnection(host::String, port::Integer[, user::String, timeout::Integer])  
+    KdbConnectionInfo(host::String, port::Integer[, user::String, timeout::Integer])  
 
 Information for a KDB connection. Requires `host` and `port`. `user and `timeout`are optional.`timeout` is an integer representing milliseconds until query timeout.
 
-Open a connection with `open(conn::KDBConnection)`
+Open a connection with `open(conn::KdbConnectionInfo)`
 """
-Base.@kwdef struct KDBConnection
+Base.@kwdef struct KdbConnectionInfo
     host::String
     port::Integer
     user::Union{String,Nothing} = nothing
@@ -31,16 +31,16 @@ Base.@kwdef struct KDBConnection
 end
 
 """
-    KDBHandle(handle_int::Integer)
+    KdbHandle(handle_int::Integer)
 
-Handle for an open connection to a KDB instance.
-Close handle with `close(h::KDBHandle)`.
+Connection handle for an open connection to a KDB instance.
+Close handle with `close(h::KdbHandle)`.
 Handle will automatically close when garbage collected.
 """
-mutable struct KDBHandle
+mutable struct KdbHandle
     handle::Int16
     isopen::Bool
-    function KDBHandle(x::Integer)
+    function KdbHandle(x::Integer)
         obj = new(x, true)
         finalizer(obj) do o
             hclose(o.handle)
@@ -48,21 +48,21 @@ mutable struct KDBHandle
     end
 end
 
-Base.show(io::IO, h::KDBHandle) = print(io, "KDBHandle(h=$(h.handle),open=$(h.isopen))")
+Base.show(io::IO, h::KdbHandle) = print(io, "KdbHandle(h=$(h.handle),open=$(h.isopen))")
 
 """
-    open(conn::KDBConnection)::KDBHandle
+    open(conn::KdbConnectionInfo)::KdbHandle
 
-Open a connection to a KDB instance. Returns a `KDBHandle` to the open connection.
+Open a connection to a KDB instance. Returns a `KdbHandle` to the open connection.
 Also supports `do` syntax:
 
 ```
-open(conn::KDBConnection) do h
+open(conn::KdbConnectionInfo) do h
     execute(h,...)
 end
 ```
 """
-function Base.open(conn::KDBConnection)
+function Base.open(conn::KdbConnectionInfo)
     if isnothing(conn.user) && isnothing(conn.timeout)
         h = hopen(conn.host, conn.port)
     elseif (!isnothing(conn.user)) && isnothing(conn.timeout)
@@ -70,33 +70,33 @@ function Base.open(conn::KDBConnection)
     elseif (!isnothing(conn.user)) && (!isnothing(conn.timeout))
         h = hopen(conn.host, conn.port, conn.user, conn.timeout)
     end
-    return KDBHandle(h)
+    return KdbHandle(h)
 end
 
-function Base.open(f::Function, conn::KDBConnection)
+function Base.open(f::Function, conn::KdbConnectionInfo)
     hobj = open(conn)
     return f(hobj)
     close!(hobj)
 end
 
 """
-    close!(conn::KDBHandle)
+    close!(conn::KdbHandle)
 
 Close a connection to a KDB instance.
 """
-function close!(c::KDBHandle)
+function close!(c::KdbHandle)
     hclose(c.handle)
     c.isopen = false
 end
 
-isopen(c::KDBHandle) = c.isopen
+isopen(c::KdbHandle) = c.isopen
 
 """
-    execute(hobj::KDBHandle, query::AbstractString, args...)
-    execute(conn::KDBConnection, query::AbstractString, args...)
+    execute(hobj::KdbHandle, query::AbstractString, args...)
+    execute(conn::KdbConnectionInfo, query::AbstractString, args...)
 
-Execute a query on a KDB instance via an open connection handle `hobj::KDBHandle`.
-If the first argument is a `KDBConnection`, a temporary handle will be opened and closed automatically.
+Execute a query on a KDB instance via an open connection handle `hobj::KdbHandle`.
+If the first argument is a `KdbConnectionInfo`, a temporary handle will be opened and closed automatically.
 A query consists of a string and optional `args` which are sent to the KDB instance.
 
 Examples:
@@ -108,7 +108,7 @@ Examples:
     execute(conn, "([] w:10?(0nj,til 3) ;x:10?1f ; y:10?(12;1b;`foo;\"bar\") ; z:10?`3)")
 ```
 """
-function execute(hobj::KDBHandle, query::AbstractString, args...; async=false)
+function execute(hobj::KdbHandle, query::AbstractString, args...; async=false)
     # if not async, continue normally
     checkhandleok(hobj.handle)
     async && return error("argument async==true not supported")
@@ -126,7 +126,7 @@ function execute(hobj::KDBHandle, query::AbstractString, args...; async=false)
     end
 end
 
-function execute(conn::KDBConnection, query::AbstractString, args...; async=false)
+function execute(conn::KdbConnectionInfo, query::AbstractString, args...; async=false)
     hobj = open(conn)
     res = execute(hobj, query, args...; async=async)
     close!(hobj)
