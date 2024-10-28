@@ -1,4 +1,4 @@
-module Q2
+module QConnect
 
 using Tables
 using Missings

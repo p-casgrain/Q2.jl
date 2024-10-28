@@ -1,7 +1,10 @@
-name = "Q2"
+name = "QConnect"
 uuid = "dbd8d13a-8743-44e2-950f-49a08588fccd"
 authors = ["Philippe Casgrain <31874380+p-casgrain@users.noreply.github.com>"]
 version = "0.2.0"
+
+[compat]
+julia = "1"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"

@@ -174,7 +174,7 @@ function jl_to_kvec(iter, ::HasLength, ::Type{Union{String,Missing}})
 end
 
 # case of multi-dimensional iterators -> drop to lower dimensional slices
-jl_to_kvec(iter, ::HasShape{0}, typ::Type{T}) where T = error("Q2.jl error: can't handle arguments with HasShape{0}: itertype=$(typeof(iter)) type=$T")
+jl_to_kvec(iter, ::HasShape{0}, typ::Type{T}) where T = error("QConnect.jl error: can't handle arguments with HasShape{0}: itertype=$(typeof(iter)) type=$T")
 jl_to_kvec(iter, ::HasShape{1}, typ::Type{T}) where T= jl_to_kvec(iter, HasLength(), typ)
 function jl_to_kvec(iter, ::HasShape{N}, typ::Type) where {N}
     slice_iter = eachslice(iter, dims=1)
@@ -192,7 +192,7 @@ function jl_to_kvec(iter, ::HasLength, ::Type)
     return k_obj
 end
 
-jl_to_kvec(_, T::Union{IsInfinite,SizeUnknown}, _) = error("Q2.jl error: Cannot convert an iterator with IteratorSize $T to K_Object")
+jl_to_kvec(_, T::Union{IsInfinite,SizeUnknown}, _) = error("QConnect.jl error: Cannot convert an iterator with IteratorSize $T to K_Object")
 
 # === Converting Dictionaries to K Objects ===
 
